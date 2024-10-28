@@ -1,0 +1,6 @@
+@CmhMtlsWebDemo_HostAddress = http://localhost:5215
+
+GET {{CmhMtlsWebDemo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
