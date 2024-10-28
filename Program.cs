@@ -9,12 +9,41 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
-    .AddCertificate();
+    .AddCertificate(opt =>
+    {
+        opt.Events = new CertificateAuthenticationEvents
+        {
+            OnCertificateValidated = context =>
+            {
+                var isValid = context.ClientCertificate is not null;
+                if (isValid)
+                {
+                    context.Success();
+                }
+                else
+                {
+                    context.Fail("Invalid client certificate");
+                }
+
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
+            {
+                context.Fail("Invalid client certificate");
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                return Task.CompletedTask;
+            }
+        };
+    });
 
 
 builder.Services.AddCertificateForwarding(options =>
 {
-    options.CertificateHeader = "X-SSL-CERT";
+    options.CertificateHeader = "X-ARR-ClientCertAppGW";
 
     options.HeaderConverter = headerValue =>
     {
